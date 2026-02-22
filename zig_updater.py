@@ -84,13 +84,13 @@ def extract_archive(archive_path: Path, dest_dir: Path):
             else:
                 tar_ref.extractall(dest_dir)
 
-def update_zig(mode: str, zig_dir: Path, backup_dir: Path):
+def update_zig(mode: str, zig_dir: Path, cache_dir: Path):
     """Main update logic."""
     logger.info("Checking for Zig updates...")
     
     # Ensure our base directories exist right away
     zig_dir.mkdir(parents=True, exist_ok=True)
-    backup_dir.mkdir(parents=True, exist_ok=True)
+    cache_dir.mkdir(parents=True, exist_ok=True)
 
     data = get_zig_data()
     os_arch = get_os_arch()
@@ -119,9 +119,9 @@ def update_zig(mode: str, zig_dir: Path, backup_dir: Path):
     # Backup existing installation if it exists
     if bin_dir.exists():
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        current_backup_dir = backup_dir / timestamp
-        shutil.copytree(bin_dir, current_backup_dir)
-        logger.info(f"Backed up current installation to {current_backup_dir}")
+        current_cache_dir = cache_dir / timestamp
+        shutil.copytree(bin_dir, current_cache_dir)
+        logger.info(f"Backed up current installation to {current_cache_dir}")
 
     # Download
     url = target_info[os_arch]['tarball']
@@ -160,12 +160,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="A tool to install and update the Zig compiler.")
     parser.add_argument("--mode", default="latest", help="Version to install: 'latest', 'master', or a specific version.")
     parser.add_argument("--dir", type=Path, default=DEFAULT_ZIG_DIR, help="Installation directory.")
-    parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE_DIR, help="Cache directory.")
+    parser.add_argument("--cache-dir", type=Path, default=DEFAULT_CACHE_DIR, help="Cache directory.")
     
     args = parser.parse_args()
 
     args.dir = args.dir.expanduser()
-    args.backup_dir = args.backup_dir.expanduser()
+    args.cache_dir = args.cache_dir.expanduser()
 
     setup_logging(args.dir / 'zig_updater.log')
-    update_zig(args.mode, args.dir, args.backup_dir)
+    update_zig(args.mode, args.dir, args.cache_dir)
